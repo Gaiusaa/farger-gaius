@@ -1,42 +1,108 @@
 // Variables
 const buttons = {
-    red: document.querySelector("#red"),
-    green: document.querySelector("#green"),
-    blue: document.querySelector("#blue"),
-    yellow: document.querySelector("#yellow"),
+    "red": document.querySelector("#red"),
+    "green": document.querySelector("#green"),
+    "blue": document.querySelector("#blue"),
+    "yellow": document.querySelector("#yellow"),
 };
 
-const result = document.querySelector("#result");
-const defaultMessage = "Click on the wheel to get a color!";
-const resultTime = 3000;
-let waiting = false;
+const content = document.querySelector("#content");
 
-let color;
+const result = document.querySelector("#result");
+const defaultMessage = "Click on Simon's color(s)!";
+const resultTime = 500;
+const successTime = 1000;
+const failTime = 1500;
+let waiting = false;
+let letUserInteract = false;
+
+let currentPosition = 0;
+let colorArray = [];
 
 // Functions
 let wait = (time, text) => {
-    if (waiting === false) {
-        waiting = true;
+    setTimeout(() => {
+        result.innerHTML = text
+        waiting = false;
+    }, time);
+}
+
+function display() {
+    const baseTime = 1000;
+
+    colorArray.forEach((element, index) => {
         setTimeout(() => {
-            result.innerHTML = text;
-            waiting = false;
-        }, time);
-    } else {
-        return;
+            console.log(element)
+            let button = buttons[element]
+            button.style.opacity = "0.5";
+            setTimeout(() => {
+                button.style.opacity = "1";
+            }, 500)
+        }, (baseTime * index))
+    });
+
+    setTimeout(() => {
+        letUserInteract = true;
+    }, (baseTime * colorArray.length) + 1000)
+}
+
+function selectColor() {
+    letUserInteract = false;
+    let number = Math.floor(Math.random() * 4);
+    
+    switch(number) {
+        case 0:
+            colorArray.push("red");
+            break;
+        case 1:
+            colorArray.push("blue");
+            break;
+        case 2:
+            colorArray.push("green");
+            break;
+        case 3:
+            colorArray.push("yellow");
+            break;
+        default:
+            colorArray.push("red");
+    }
+
+    display()
+}
+
+function onClick(event) {
+    if (waiting === false && letUserInteract === true) {
+        waiting = true;
+        const element = event.target;
+        let comment = "";
+
+        if (element.id === colorArray[currentPosition]) {
+            currentPosition += 1;
+            comment = "You clicked the right color!";
+
+            if (currentPosition === colorArray.length) {
+                setTimeout(() => {
+                    selectColor();
+                    currentPosition = 0;
+                }, successTime)
+            }
+        } else {
+            currentPosition = 0;
+            colorArray.length = 0;
+
+            setTimeout(() => {
+                selectColor();
+            }, failTime)
+
+            comment = "You clicked the wrong color!";
+        }
+        result.innerHTML = comment
+
+        console.log(comment)
+        wait(resultTime, defaultMessage);
     }
 }
 
-function onClick(newColor) {
-    if (newColor === color) {
-        result.innerHTML = `You picked ${color} again!`;
-    } else {
-        color = newColor;
-        result.innerHTML = `You picked ${color}!`;
-    }
-    wait(resultTime, defaultMessage);
-}
+selectColor()
 
-buttons.red.addEventListener("click", () => onClick("red"));
-buttons.green.addEventListener("click", () => onClick("green"));
-buttons.blue.addEventListener("click", () => onClick("blue"));
-buttons.yellow.addEventListener("click", () => onClick("yellow"));
+content.addEventListener("click", () => onClick(event))
